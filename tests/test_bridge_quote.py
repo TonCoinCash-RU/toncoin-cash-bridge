@@ -35,3 +35,8 @@ async def test_quote_btc_tcc_chains_legs(mock_quote):
 def test_format_human_output_tcc_nanoton():
     formatted = bridge_service._format_human_output("tcc", "49874995")
     assert formatted == "0.049874995"
+
+
+def test_format_human_output_tcc_nanoton_with_decimal_noise():
+    formatted = bridge_service._format_human_output("tcc", "36394371.025")
+    assert formatted == "0.036394371"
