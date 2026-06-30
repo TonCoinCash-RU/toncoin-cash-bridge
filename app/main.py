@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from .auth import require_api_key
 from .bridge_service import bridge_service
 from .config import settings
+from .http_errors import internal_error_http, provider_error_http, value_error_http
 from .schemas import (
     AssetsResponse,
     BuildStepRequest,
@@ -45,7 +46,8 @@ async def unhandled_errors(_: Request, exc: Exception):
     log.exception("unhandled_error")
     if isinstance(exc, HTTPException):
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-    return JSONResponse(status_code=500, content={"detail": {"message": str(exc)}})
+    http_exc = internal_error_http()
+    return JSONResponse(status_code=http_exc.status_code, content={"detail": http_exc.detail})
 
 
 @app.get("/healthz", response_model=HealthResponse)
@@ -87,17 +89,10 @@ async def bridge_quote(payload: QuoteRequest) -> QuoteResponse:
             wallets=payload.wallets,
         )
     except ValueError as exc:
-        code = str(exc)
-        raise HTTPException(
-            status_code=400,
-            detail={"code": code, "message": code},
-        )
+        raise value_error_http(exc) from exc
     except Exception as exc:
         log.exception("bridge_quote_failed")
-        raise HTTPException(
-            status_code=502,
-            detail={"code": "provider_error", "message": str(exc)},
-        )
+        raise provider_error_http() from exc
 
 
 @app.post(
@@ -116,14 +111,7 @@ async def bridge_build_step(payload: BuildStepRequest) -> BuildStepResponse:
             wallets=payload.wallets,
         )
     except ValueError as exc:
-        code = str(exc)
-        raise HTTPException(
-            status_code=400,
-            detail={"code": code, "message": code},
-        )
+        raise value_error_http(exc) from exc
     except Exception as exc:
         log.exception("bridge_build_step_failed")
-        raise HTTPException(
-            status_code=502,
-            detail={"code": "provider_error", "message": str(exc)},
-        )
+        raise provider_error_http() from exc
