@@ -152,13 +152,23 @@ class BridgeService:
             from_asset=from_asset.lower(),
             to_asset=to_asset.lower(),
             input_amount=amount,
-            output_amount=current_amount,
+            output_amount=self._format_human_output(to_asset.lower(), current_amount),
             output_amount_min=last_quote.get("output_amount_min"),
             price_impact_pct=last_quote.get("price_impact_pct"),
             execution="multi_step",
             route_kind="tcc_extended",
             step_count=len(legs),
         )
+
+    def _format_human_output(self, asset: str, amount: str) -> str:
+        if asset != "tcc":
+            return amount
+        try:
+            human = Decimal(amount) / Decimal("1000000000")
+        except (InvalidOperation, ValueError):
+            return amount
+        text = f"{human:.9f}".rstrip("0").rstrip(".")
+        return text or "0"
 
     async def build_step(
         self,

@@ -30,3 +30,8 @@ async def test_quote_btc_tcc_chains_legs(mock_quote):
     assert mock_quote.await_count == 2
     assert mock_quote.await_args_list[0].kwargs["from_asset"] == "btc"
     assert mock_quote.await_args_list[1].kwargs["to_asset"] == "tcc"
+
+
+def test_format_human_output_tcc_nanoton():
+    formatted = bridge_service._format_human_output("tcc", "49874995")
+    assert formatted == "0.049874995"
