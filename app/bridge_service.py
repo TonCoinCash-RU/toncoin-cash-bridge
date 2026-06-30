@@ -167,7 +167,7 @@ class BridgeService:
             value = Decimal(amount.replace(",", "."))
         except (InvalidOperation, ValueError):
             return amount
-        if "." in amount.strip() or value < Decimal("1000000"):
+        if value < Decimal("1000000"):
             return amount
         human = value / Decimal("1000000000")
         text = f"{human:.9f}".rstrip("0").rstrip(".")
