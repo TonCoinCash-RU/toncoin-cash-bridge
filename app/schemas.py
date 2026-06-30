@@ -88,8 +88,12 @@ class BuildStepRequest(BaseModel):
 
 class BuildStepResponse(BaseModel):
     step_order: int
-    total_steps: int
+    action: str
     provider: str
     from_asset: str
     to_asset: str
+    input_amount: str
     payload: dict
+    total_steps: int
+    wait_hint: str | None = None
+    order_id: str | None = None

@@ -178,13 +178,12 @@ class BridgeService:
                 slippage_bps=slippage_bps,
                 wallets=wallets_dict,
             )
-            return BuildStepResponse(
+            return self._build_step_from_swap(
+                result,
+                leg=leg,
                 step_order=step_order,
                 total_steps=len(legs),
-                provider=leg.provider,
-                from_asset=leg.from_asset,
-                to_asset=leg.to_asset,
-                payload=result.get("payload") or result,
+                amount=amount,
             )
 
         wallet = self._wallet_for_asset(swap_from, None, wallets)
@@ -199,13 +198,39 @@ class BridgeService:
             wallet_address=wallet,
             wallets=wallets_dict,
         )
-        return BuildStepResponse(
+        return self._build_step_from_swap(
+            result,
+            leg=leg,
             step_order=step_order,
             total_steps=len(legs),
-            provider=leg.provider,
-            from_asset=leg.from_asset,
-            to_asset=leg.to_asset,
-            payload=result.get("payload") or result,
+            amount=amount,
+            default_action="swap",
+        )
+
+    def _build_step_from_swap(
+        self,
+        result: dict,
+        *,
+        leg: PlannedLeg,
+        step_order: int,
+        total_steps: int,
+        amount: str,
+        default_action: str | None = None,
+    ) -> BuildStepResponse:
+        payload = result.get("payload") or result
+        if not isinstance(payload, dict):
+            payload = {}
+        return BuildStepResponse(
+            step_order=int(result.get("step_order") or step_order),
+            action=str(result.get("action") or default_action or leg.action),
+            provider=str(result.get("provider") or leg.provider),
+            from_asset=str(result.get("from_asset") or leg.from_asset),
+            to_asset=str(result.get("to_asset") or leg.to_asset),
+            input_amount=str(result.get("input_amount") or amount),
+            payload=payload,
+            total_steps=int(result.get("total_steps") or total_steps),
+            wait_hint=result.get("wait_hint"),
+            order_id=result.get("order_id"),
         )
 
     def _swap_leg_mapping(
