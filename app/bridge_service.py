@@ -4,7 +4,7 @@ import logging
 from decimal import Decimal, InvalidOperation
 
 from .adapters.swap_client import swap_client
-from .assets import BridgeAsset, is_supported_pair, parse_asset
+from .assets import parse_asset
 from .planner import PlannedLeg, plan_route
 from .schemas import (
     AssetsResponse,
@@ -115,6 +115,20 @@ class BridgeService:
                 )
                 current_amount = str(last_quote.get("output_amount") or current_amount)
                 index += 2
+                continue
+
+            if leg.delegate == "swap_eth_tcc":
+                wallet = self._wallet_for_asset("eth", wallet_address, wallets)
+                last_quote = await swap_client.quote(
+                    from_asset="eth",
+                    to_asset="tcc",
+                    amount=current_amount,
+                    slippage_bps=slippage_bps,
+                    wallet_address=wallet,
+                    wallets=wallets_dict,
+                )
+                current_amount = str(last_quote.get("output_amount") or current_amount)
+                index += 1
                 continue
 
             if swap_step is not None:
